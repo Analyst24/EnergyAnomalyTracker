@@ -42,6 +42,56 @@ login_manager.login_message_category = 'info'
 with app.app_context():
     import models  # noqa: F401
     db.create_all()
+    
+    # Add demo user and data for easier testing if no users exist
+    from models import User, Dataset, Analysis
+    import json
+    import numpy as np
+    import os
+    
+    if not User.query.first():
+        demo_user = User(username="demo_user", email="demo@example.com")
+        demo_user.set_password("password123")
+        db.session.add(demo_user)
+        
+        # Check if the sample file exists
+        sample_file_path = os.path.join(os.getcwd(), 'uploads', 'sample_energy_data.csv')
+        if os.path.exists(sample_file_path):
+            # Create demo dataset
+            demo_dataset = Dataset(
+                name="Sample Energy Data",
+                filename="sample_energy_data.csv",
+                description="Sample energy consumption dataset for demonstration",
+                user_id=1  # This will be the ID of the demo user
+            )
+            db.session.add(demo_dataset)
+            
+            # Generate random anomalies for demo
+            num_samples = 120  # Approximate number of rows in the sample file
+            random_anomalies = np.zeros(num_samples)
+            anomaly_indices = np.random.choice(num_samples, size=int(num_samples * 0.1), replace=False)
+            random_anomalies[anomaly_indices] = 1
+            
+            # Create demo analysis
+            demo_analysis = Analysis(
+                name="Sample Analysis - Isolation Forest",
+                algorithm="isolation_forest",
+                dataset_id=1,  # This will be the ID of the demo dataset
+                results=json.dumps(random_anomalies.tolist()),
+                accuracy=0.92,
+                precision=0.85,
+                recall=0.78,
+                f1_score=0.81,
+                anomaly_count=int(np.sum(random_anomalies))
+            )
+            db.session.add(demo_analysis)
+            
+            try:
+                db.session.commit()
+            except Exception as e:
+                # If the demo data creation fails, just log it and continue
+                print(f"Error creating demo data: {str(e)}")
+                db.session.rollback()
 
 # Load user function for login manager
 from models import User  # noqa: E402
