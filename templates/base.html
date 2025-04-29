@@ -12,13 +12,333 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Plotly.js for charts -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     
     <!-- Main CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2ecc71;
+            --secondary-dark: #27ae60;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --card-bg: #1e1e1e;
+            --card-header: #252525;
+            --sidebar-bg: #151515;
+            --sidebar-hover: #202020;
+            --text-light: #ecf0f1;
+            --text-muted: #95a5a6;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --success: #2ecc71;
+            --info: #3498db;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        /* Improved Sidebar Styling */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            padding-top: 1rem;
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+        }
+        
+        .sidebar.collapsed {
+            width: 60px;
+        }
+        
+        .sidebar-brand {
+            padding: 1rem;
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .sidebar-brand:before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            bottom: 0.5rem;
+            height: 2px;
+            width: 50px;
+            background-color: var(--primary);
+        }
+        
+        .sidebar-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+        
+        .nav-item {
+            margin: 0.3rem 0;
+        }
+        
+        .nav-link {
+            color: var(--text-light);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar.collapsed .nav-link {
+            padding: 0.75rem 1rem;
+            justify-content: center;
+        }
+        
+        .nav-link i {
+            font-size: 1.2rem;
+            margin-right: 1rem;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--sidebar-hover);
+            border-left-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        /* Content Wrapper Styling */
+        .content-wrapper {
+            margin-left: 250px;
+            padding: 2rem;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        
+        .sidebar.collapsed ~ .content-wrapper {
+            margin-left: 60px;
+        }
+        
+        /* Card Styling */
+        .card {
+            background-color: var(--card-bg);
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background-color: var(--card-header);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+        }
+        
+        .card-header h5 {
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Button Styling */
+        .btn {
+            border-radius: 5px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--secondary-dark);
+            border-color: var(--secondary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.4);
+        }
+        
+        .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Form Styling */
+        .form-control, .form-select {
+            background-color: #2a2a2a;
+            border: 1px solid #333;
+            color: var(--text-light);
+            padding: 0.75rem 1rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: #2c2c2c;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+            color: var(--text-light);
+        }
+        
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Table Styling */
+        .table {
+            color: var(--text-light);
+        }
+        
+        .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        /* Alert Styling */
+        .alert {
+            border-radius: 8px;
+            padding: 1rem;
+            border: none;
+        }
+        
+        /* Badge Styling */
+        .badge {
+            padding: 0.5rem 0.75rem;
+            font-weight: 500;
+            border-radius: 5px;
+        }
+        
+        /* Footer Styling */
+        footer {
+            padding: 1.5rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Page header */
+        .page-header {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+        
+        /* Utility classes */
+        .bg-card {
+            background-color: var(--card-bg);
+        }
+        
+        .text-light {
+            color: var(--text-light) !important;
+        }
+        
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Chart container */
+        .chart-container {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 1rem;
+            height: 100%;
+            min-height: 300px;
+        }
+        
+        /* Animation effects */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -57,12 +377,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('results', analysis_id=1) }}">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Results</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('insights') }}">
                     <i class="fas fa-lightbulb"></i>
                     <span>Model Insights</span>
@@ -91,12 +405,12 @@
     
     <!-- Main Content -->
     <div class="content-wrapper">
-        <div class="container-fluid">
+        <div class="container-fluid fade-in">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
                         <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
-                            {{ message }}
+                            <i class="fas fa-info-circle me-2"></i> {{ message }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     {% endfor %}
@@ -107,7 +421,8 @@
             
             <!-- Footer -->
             <footer>
-                <p>&copy; 2025 Opulent Chikwiramakomo. All rights reserved.</p>
+                <p>&copy; 2025 Energy Anomaly Detection. All rights reserved.</p>
+                <p class="text-muted mb-0">Version 1.0.0</p>
             </footer>
         </div>
     </div>
@@ -117,7 +432,36 @@
     
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    
+    <script>
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const savedState = localStorage.getItem('sidebarCollapsed');
+            
+            // Apply saved state if exists
+            if (savedState === 'true') {
+                sidebar.classList.add('collapsed');
+            }
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+            
+            // Highlight active navigation link
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === currentPath || (currentPath.includes('/results/') && href.includes('/results/'))) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

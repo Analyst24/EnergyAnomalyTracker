@@ -190,19 +190,38 @@ def results(analysis_id):
     # Get dataset
     dataset = analysis.dataset
     
-    # Load data
-    file_path = get_dataset_path(dataset.filename)
-    df = pd.read_csv(file_path)
+    try:
+        # Load data
+        file_path = get_dataset_path(dataset.filename)
+        df = pd.read_csv(file_path)
+        
+        # Get results
+        results = json.loads(analysis.results)
+        
+        return render_template('results.html', 
+                              title='Analysis Results',
+                              analysis=analysis,
+                              dataset=dataset,
+                              data_preview=df.head(10).to_html(classes='table table-dark table-striped'),
+                              column_names=df.columns.tolist())
+    except Exception as e:
+        flash(f'Error loading analysis results: {str(e)}', 'danger')
+        return redirect(url_for('dashboard'))
+        
+# Fallback route for results without an ID
+@app.route('/results')
+@login_required
+def results_redirect():
+    # Find the most recent analysis for the current user
+    latest_analysis = Analysis.query.join(Dataset).filter(
+        Dataset.user_id == current_user.id
+    ).order_by(Analysis.created_at.desc()).first()
     
-    # Get results
-    results = json.loads(analysis.results)
-    
-    return render_template('results.html', 
-                          title='Analysis Results',
-                          analysis=analysis,
-                          dataset=dataset,
-                          data_preview=df.head(10).to_html(classes='table table-dark table-striped'),
-                          column_names=df.columns.tolist())
+    if latest_analysis:
+        return redirect(url_for('results', analysis_id=latest_analysis.id))
+    else:
+        flash('No analysis results available. Run an anomaly detection first.', 'info')
+        return redirect(url_for('detection'))
 
 # Model insights route
 @app.route('/insights')
