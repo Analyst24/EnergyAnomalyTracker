@@ -279,9 +279,25 @@ def recommendations():
                           analysis=latest_analysis)
 
 # Settings route
-@app.route('/settings')
+@app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
+    if request.method == 'POST':
+        if 'clear_analyses' in request.form:
+            try:
+                # Get all analyses for the current user's datasets
+                user_analyses = Analysis.query.join(Dataset).filter(Dataset.user_id == current_user.id).all()
+                
+                # Delete all analyses
+                for analysis in user_analyses:
+                    db.session.delete(analysis)
+                
+                db.session.commit()
+                flash('All analyses have been successfully cleared.', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error clearing analyses: {str(e)}', 'danger')
+                
     return render_template('settings.html', title='Settings')
 
 # API routes for chart data

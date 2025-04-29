@@ -177,9 +177,12 @@
                 </div>
                 
                 <div class="mb-3">
-                    <button type="button" class="btn btn-danger w-100">
-                        <i class="fas fa-trash-alt me-2"></i> Clear All Analyses
-                    </button>
+                    <form action="{{ url_for('settings') }}" method="post" id="clear-analyses-form">
+                        <input type="hidden" name="clear_analyses" value="true">
+                        <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to delete all analyses? This action cannot be undone.')">
+                            <i class="fas fa-trash-alt me-2"></i> Clear All Analyses
+                        </button>
+                    </form>
                     <div class="form-text text-muted">Delete all analysis results (datasets will be preserved).</div>
                 </div>
             </div>
@@ -240,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Show info alerts when saving settings (for demo purposes)
-    const saveButtons = document.querySelectorAll('button[type="submit"]');
+    const saveButtons = document.querySelectorAll('button[type="submit"]:not(#clear-analyses-form button)');
     saveButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();

@@ -44,195 +44,255 @@
 {% block content %}
 <div class="row mt-4">
     <div class="col-12">
-        <h1 class="page-header">
-            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-        </h1>
+        <div class="page-header">
+            <h1><i class="fas fa-tachometer-alt me-2"></i> Dashboard</h1>
+            <div class="header-actions">
+                <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm btn-icon">
+                    <i class="fas fa-upload"></i> Upload Data
+                </a>
+                <a href="{{ url_for('detection') }}" class="btn btn-secondary btn-sm btn-icon">
+                    <i class="fas fa-play"></i> Run Detection
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Key Metrics -->
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
+<!-- Key Metrics with Visual Indicators -->
+<div class="dashboard-grid">
+    <div class="grid-col-3">
         <div class="metric-card">
             <div class="metric-icon">
                 <i class="fas fa-database"></i>
             </div>
             <div class="metric-value" id="dataset-count">{{ datasets|length }}</div>
             <div class="metric-label">Datasets</div>
+            <div class="progress mt-2" style="height: 5px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ (datasets|length) * 10 }}%"></div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="grid-col-3">
         <div class="metric-card">
             <div class="metric-icon">
                 <i class="fas fa-chart-line"></i>
             </div>
             <div class="metric-value" id="analysis-count">{{ analyses|length }}</div>
             <div class="metric-label">Analyses</div>
+            <div class="progress mt-2" style="height: 5px;">
+                <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ (analyses|length) * 10 }}%"></div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="grid-col-3">
         <div class="metric-card">
             <div class="metric-icon">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
             <div class="metric-value" id="anomaly-count">0</div>
             <div class="metric-label">Anomalies Detected</div>
+            <div class="progress mt-2" style="height: 5px;">
+                <div class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="grid-col-3">
         <div class="metric-card">
             <div class="metric-icon">
                 <i class="fas fa-percentage"></i>
             </div>
             <div class="metric-value" id="avg-anomalies">0.00</div>
             <div class="metric-label">Avg. Anomalies per Analysis</div>
+            <div class="progress mt-2" style="height: 5px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Main Dashboard Charts -->
-<div class="row">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-line me-2"></i> Energy Consumption Trend
-                </h5>
+<div class="dashboard-grid">
+    <div class="grid-col-8">
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-chart-line"></i> Energy Consumption Trend
             </div>
-            <div class="card-body">
-                <div id="energy-trend-chart" class="chart-container"></div>
+            <div class="chart-subtitle">Time series analysis of energy consumption patterns with anomaly highlights</div>
+            <div id="energy-trend-chart" style="height: 320px;"></div>
+            <div class="chart-legend">
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background-color: var(--primary);"></div>
+                    <span>Normal Consumption</span>
+                </div>
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background-color: var(--danger);"></div>
+                    <span>Anomalies</span>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-pie me-2"></i> Algorithm Distribution
-                </h5>
+    <div class="grid-col-4">
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-chart-pie"></i> Algorithm Distribution
             </div>
-            <div class="card-body">
-                <div id="algorithm-distribution-chart" class="chart-container"></div>
+            <div class="chart-subtitle">Breakdown of detection methods used</div>
+            <div id="algorithm-distribution-chart" style="height: 280px;"></div>
+            <div class="chart-footer">
+                Based on {{ analyses|length }} analyses
             </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Activity & Data Preview -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-database me-2"></i> Datasets
-                </h5>
-                <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-upload me-1"></i> Upload
+<!-- Recent Activity Cards -->
+<div class="dashboard-grid">
+    <div class="grid-col-6">
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-table"></i> Recent Datasets
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="chart-subtitle">Your uploaded energy consumption datasets</div>
+                <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm btn-icon">
+                    <i class="fas fa-upload"></i> Upload New
                 </a>
             </div>
-            <div class="card-body">
-                {% if datasets %}
-                <div class="table-responsive">
-                    <table class="table table-dark table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Created</th>
-                                <th>Size</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for dataset in datasets %}
-                            <tr>
-                                <td>{{ dataset.name }}</td>
-                                <td>{{ dataset.created_at.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ dataset.filename }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No datasets uploaded yet. 
-                    <a href="{{ url_for('upload') }}" class="alert-link">Upload your first dataset</a> to get started.
-                </div>
+            
+            {% if datasets %}
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dataset in datasets[:5] %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-file-csv me-2" style="color: var(--primary-light);"></i>
+                                    {{ dataset.name }}
+                                </div>
+                            </td>
+                            <td>{{ dataset.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-light dataset-view-btn" data-id="{{ dataset.id }}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> No datasets uploaded yet.
+                <a href="{{ url_for('upload') }}" class="alert-link">Upload your first dataset</a> to get started.
+            </div>
+            {% endif %}
+            
+            <div class="chart-footer text-end">
+                {% if datasets|length > 5 %}
+                <span>Showing 5 of {{ datasets|length }} datasets</span>
                 {% endif %}
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-search me-2"></i> Recent Analyses
-                </h5>
-                <a href="{{ url_for('detection') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-play me-1"></i> Run Detection
+    
+    <div class="grid-col-6">
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-search"></i> Recent Analyses
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="chart-subtitle">Results from anomaly detection runs</div>
+                <a href="{{ url_for('detection') }}" class="btn btn-secondary btn-sm btn-icon">
+                    <i class="fas fa-play"></i> Run Detection
                 </a>
             </div>
-            <div class="card-body">
-                {% if analyses %}
-                <div class="table-responsive">
-                    <table class="table table-dark table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Algorithm</th>
-                                <th>Anomalies</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for analysis in analyses %}
-                            <tr>
-                                <td>{{ analysis.name }}</td>
-                                <td>
+            
+            {% if analyses %}
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Algorithm</th>
+                            <th>Anomalies</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for analysis in analyses[:5] %}
+                        <tr>
+                            <td>{{ analysis.name }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if analysis.algorithm == 'isolation_forest' %}badge-primary
+                                    {% elif analysis.algorithm == 'autoencoder' %}badge-accent
+                                    {% elif analysis.algorithm == 'kmeans' %}badge-secondary
+                                    {% endif %}">
                                     {% if analysis.algorithm == 'isolation_forest' %}
-                                        Isolation Forest
+                                        <i class="fas fa-tree me-1"></i> Isolation Forest
                                     {% elif analysis.algorithm == 'autoencoder' %}
-                                        AutoEncoder
+                                        <i class="fas fa-brain me-1"></i> AutoEncoder
                                     {% elif analysis.algorithm == 'kmeans' %}
-                                        K-Means
+                                        <i class="fas fa-project-diagram me-1"></i> K-Means
                                     {% else %}
                                         {{ analysis.algorithm }}
                                     {% endif %}
-                                </td>
-                                <td>{{ analysis.anomaly_count }}</td>
-                                <td>
-                                    <a href="{{ url_for('results', analysis_id=analysis.id) }}" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-chart-line"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No analyses run yet. 
-                    <a href="{{ url_for('detection') }}" class="alert-link">Run your first analysis</a> to detect anomalies.
-                </div>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if analysis.anomaly_count > 10 %}badge-danger{% else %}badge-warning{% endif %}">
+                                    {{ analysis.anomaly_count }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('results', analysis_id=analysis.id) }}" class="btn btn-primary btn-sm btn-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> No analyses run yet.
+                <a href="{{ url_for('detection') }}" class="alert-link">Run your first analysis</a> to detect anomalies.
+            </div>
+            {% endif %}
+            
+            <div class="chart-footer text-end">
+                {% if analyses|length > 5 %}
+                <span>Showing 5 of {{ analyses|length }} analyses</span>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Data Visualization Section -->
-<div class="row">
-    <div class="col-12">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-bar me-2"></i> Data Exploration
-                </h5>
+<!-- Data Exploration Section -->
+<div class="dashboard-grid">
+    <div class="grid-col-12">
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-chart-bar"></i> Interactive Data Exploration
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="dataset-select" class="form-label">Select Dataset</label>
+            <div class="chart-subtitle">Analyze your data and detection results</div>
+            
+            <div class="row mb-4">
+                <div class="col-md-5">
+                    <label for="dataset-select" class="form-label">Select Dataset</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-database"></i></span>
                         <select class="form-select" id="dataset-select">
                             <option value="">-- Select a dataset --</option>
                             {% for dataset in datasets %}
@@ -240,8 +300,11 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <label for="analysis-select" class="form-label">Select Analysis</label>
+                </div>
+                <div class="col-md-5">
+                    <label for="analysis-select" class="form-label">Select Analysis</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
                         <select class="form-select" id="analysis-select">
                             <option value="">-- Select an analysis --</option>
                             {% for analysis in analyses %}
@@ -250,19 +313,44 @@
                         </select>
                     </div>
                 </div>
-                
-                <div id="dataset-visualization" class="chart-container mb-3">
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-chart-line fa-3x mb-3"></i>
-                        <p>Select a dataset to visualize data</p>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" id="refresh-visualization">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="dataset-visualization" class="chart-container mb-3" style="height: 300px; min-height: auto;">
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <p>Select a dataset to visualize data</p>
+                        </div>
                     </div>
                 </div>
-                
-                <div id="analysis-results" class="chart-container">
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-search fa-3x mb-3"></i>
-                        <p>Select an analysis to view results</p>
+                <div class="col-md-6">
+                    <div id="analysis-results" class="chart-container" style="height: 300px; min-height: auto;">
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <p>Select an analysis to view results</p>
+                        </div>
                     </div>
+                </div>
+            </div>
+            
+            <div class="chart-legend mt-3">
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background-color: var(--primary);"></div>
+                    <span>Normal Data</span>
+                </div>
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background-color: var(--danger);"></div>
+                    <span>Anomalies</span>
+                </div>
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background-color: var(--warning);"></div>
+                    <span>Threshold</span>
                 </div>
             </div>
         </div>

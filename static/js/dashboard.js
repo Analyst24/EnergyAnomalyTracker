@@ -144,6 +144,51 @@ function addDashboardEventListeners() {
             }
         });
     }
+    
+    // Refresh visualization button
+    const refreshBtn = document.getElementById('refresh-visualization');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            const datasetId = document.getElementById('dataset-select')?.value;
+            const analysisId = document.getElementById('analysis-select')?.value;
+            
+            if (datasetId) {
+                loadDatasetVisualization(datasetId);
+            }
+            
+            if (analysisId) {
+                loadAnalysisResults(analysisId);
+            }
+            
+            if (!datasetId && !analysisId) {
+                alert('Please select a dataset or analysis to visualize');
+            }
+        });
+    }
+    
+    // Dataset view buttons in the recent datasets table
+    const datasetViewBtns = document.querySelectorAll('.dataset-view-btn');
+    datasetViewBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const datasetId = this.getAttribute('data-id');
+            if (datasetId) {
+                // Update the dataset select dropdown
+                const datasetSelect = document.getElementById('dataset-select');
+                if (datasetSelect) {
+                    datasetSelect.value = datasetId;
+                }
+                
+                // Load the visualization
+                loadDatasetVisualization(datasetId);
+                
+                // Scroll to the visualization section
+                document.getElementById('dataset-visualization')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        });
+    });
 }
 
 /**
