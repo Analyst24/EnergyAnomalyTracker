@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Energy Anomaly Detection{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h1 class="page-header">
+            <i class="fas fa-cog me-2"></i> System Settings
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- User Settings Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-cog me-2"></i> User Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" value="{{ current_user.username }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" value="{{ current_user.email }}">
+                    </div>
+                    
+                    <h6 class="border-bottom pb-2 mt-4 mb-3">Change Password</h6>
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Analysis Settings Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-sliders-h me-2"></i> Analysis Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form>
+                    <h6 class="border-bottom pb-2 mb-3">Algorithm Parameters</h6>
+                    
+                    <div class="mb-3">
+                        <label for="contamination" class="form-label">Contamination Factor</label>
+                        <div class="input-group">
+                            <input type="range" class="form-range form-control" id="contamination" min="0.01" max="0.2" step="0.01" value="0.05">
+                            <span class="input-group-text" id="contamination-value">0.05</span>
+                        </div>
+                        <div class="form-text text-muted">Expected proportion of anomalies in the data (0.01 - 0.2)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="anomaly_threshold" class="form-label">Anomaly Detection Threshold</label>
+                        <select class="form-select" id="anomaly_threshold">
+                            <option value="strict">Strict (Fewer anomalies, higher confidence)</option>
+                            <option value="balanced" selected>Balanced</option>
+                            <option value="sensitive">Sensitive (More anomalies, lower confidence)</option>
+                        </select>
+                    </div>
+                    
+                    <h6 class="border-bottom pb-2 mt-4 mb-3">Data Processing</h6>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="auto_scale" checked>
+                            <label class="form-check-label" for="auto_scale">Auto-scale numerical features</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="handle_missing" checked>
+                            <label class="form-check-label" for="handle_missing">Automatically handle missing values</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="extract_time" checked>
+                            <label class="form-check-label" for="extract_time">Extract time features from datetime columns</label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- App Settings Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-desktop me-2"></i> Display Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Theme</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-dark active w-100">Dark</button>
+                        <button class="btn btn-outline-light w-100" disabled>Light (Coming Soon)</button>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="chart_style" class="form-label">Chart Style</label>
+                    <select class="form-select" id="chart_style">
+                        <option value="dark" selected>Dark Theme</option>
+                        <option value="blue">Blue Theme</option>
+                        <option value="green">Green Theme</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="home_chart" class="form-label">Home Page Chart</label>
+                    <select class="form-select" id="home_chart">
+                        <option value="energy" selected>Energy Consumption</option>
+                        <option value="anomaly">Anomaly Distribution</option>
+                        <option value="algorithm">Algorithm Comparison</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="show_animations" checked>
+                        <label class="form-check-label" for="show_animations">Enable animations</label>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-primary w-100">Apply Display Settings</button>
+            </div>
+        </div>
+        
+        <!-- Data Management Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-database me-2"></i> Data Management
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-light w-100 mb-2">
+                        <i class="fas fa-download me-2"></i> Export All Data
+                    </button>
+                    <div class="form-text text-muted">Download all your datasets and analysis results.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-light w-100 mb-2">
+                        <i class="fas fa-file-csv me-2"></i> Export Results as CSV
+                    </button>
+                    <div class="form-text text-muted">Export analysis results to CSV format.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="button" class="btn btn-danger w-100">
+                        <i class="fas fa-trash-alt me-2"></i> Clear All Analyses
+                    </button>
+                    <div class="form-text text-muted">Delete all analysis results (datasets will be preserved).</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Information Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i> System Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush bg-transparent">
+                    <li class="list-group-item d-flex justify-content-between bg-transparent">
+                        <span>Version</span>
+                        <span>1.0.0</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between bg-transparent">
+                        <span>ML Framework</span>
+                        <span>Scikit-learn, TensorFlow</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between bg-transparent">
+                        <span>Data Processing</span>
+                        <span>Pandas, NumPy</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between bg-transparent">
+                        <span>Visualizations</span>
+                        <span>Plotly, Seaborn</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between bg-transparent">
+                        <span>Frontend</span>
+                        <span>Bootstrap 5</span>
+                    </li>
+                </ul>
+                
+                <div class="mt-3 text-center">
+                    <p class="mb-1 text-muted">© 2025 Opulent Chikwiramakomo</p>
+                    <p class="mb-0 text-muted">All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update contamination value display when slider changes
+    const contaminationSlider = document.getElementById('contamination');
+    const contaminationValue = document.getElementById('contamination-value');
+    
+    if (contaminationSlider && contaminationValue) {
+        contaminationSlider.addEventListener('input', function() {
+            contaminationValue.textContent = this.value;
+        });
+    }
+    
+    // Show info alerts when saving settings (for demo purposes)
+    const saveButtons = document.querySelectorAll('button[type="submit"]');
+    saveButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Create alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i> Settings saved successfully.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            // Add alert before the form
+            this.closest('form').prepend(alertDiv);
+            
+            // Remove alert after 3 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        });
+    });
+});
+</script>
+{% endblock %}

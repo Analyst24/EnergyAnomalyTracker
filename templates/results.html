@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Results - Energy Anomaly Detection{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h1 class="page-header">
+            <i class="fas fa-chart-line me-2"></i> Analysis Results
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Analysis Results</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Analysis Summary Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i> Analysis Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Analysis Details:</h6>
+                        <table class="table table-dark table-sm">
+                            <tbody>
+                                <tr>
+                                    <th>Name:</th>
+                                    <td>{{ analysis.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Dataset:</th>
+                                    <td>{{ dataset.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Algorithm:</th>
+                                    <td>
+                                        {% if analysis.algorithm == 'isolation_forest' %}
+                                            Isolation Forest
+                                        {% elif analysis.algorithm == 'autoencoder' %}
+                                            AutoEncoder
+                                        {% elif analysis.algorithm == 'kmeans' %}
+                                            K-Means Clustering
+                                        {% else %}
+                                            {{ analysis.algorithm }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Created:</th>
+                                    <td>{{ analysis.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Performance Metrics:</h6>
+                        <div class="row">
+                            <div class="col-6 col-md-3">
+                                <div class="card bg-dark text-center mb-3">
+                                    <div class="card-body py-2">
+                                        <h3 class="mb-0">{{ "%.1f"|format(analysis.accuracy * 100) }}%</h3>
+                                        <small>Accuracy</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card bg-dark text-center mb-3">
+                                    <div class="card-body py-2">
+                                        <h3 class="mb-0">{{ "%.1f"|format(analysis.precision * 100) }}%</h3>
+                                        <small>Precision</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card bg-dark text-center mb-3">
+                                    <div class="card-body py-2">
+                                        <h3 class="mb-0">{{ "%.1f"|format(analysis.recall * 100) }}%</h3>
+                                        <small>Recall</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card bg-dark text-center mb-3">
+                                    <div class="card-body py-2">
+                                        <h3 class="mb-0">{{ analysis.anomaly_count }}</h3>
+                                        <small>Anomalies</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-2">
+                            <i class="fas fa-info-circle me-2"></i> 
+                            <strong>F1 Score:</strong> {{ "%.2f"|format(analysis.f1_score) }} - 
+                            This is a measure of balance between precision and recall.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Visualization Cards -->
+<div class="row">
+    <!-- Time Series Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i> Energy Consumption with Anomalies
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="time-series-chart" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Anomaly Distribution Chart -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i> Anomaly Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="anomaly-pie-chart" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Distribution Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i> Energy Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="distribution-chart" style="height: 350px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Time of Day Heatmap -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i> Time of Day Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="time-heatmap" style="height: 350px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Preview & Recommendations -->
+<div class="row">
+    <!-- Data Preview -->
+    <div class="col-lg-7 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i> Data Preview
+                </h5>
+                <button class="btn btn-outline-light btn-sm" id="toggle-anomalies">
+                    <i class="fas fa-filter me-1"></i> Show Anomalies Only
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {{ data_preview|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recommendations Card -->
+    <div class="col-lg-5 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i> Energy Efficiency Recommendations
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-exclamation-triangle me-2" style="color: var(--danger);"></i>
+                        <h6 class="mb-0">Anomaly Insights</h6>
+                    </div>
+                    <p>{{ analysis.anomaly_count }} anomalies were detected in your energy data. These could indicate:</p>
+                    <ul>
+                        <li>Unusual energy consumption patterns</li>
+                        <li>Possible equipment malfunctions</li>
+                        <li>Inefficient operation periods</li>
+                        <li>Unexpected peak usage times</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-check-circle me-2" style="color: var(--success);"></i>
+                        <h6 class="mb-0">Recommended Actions</h6>
+                    </div>
+                    <ol>
+                        <li>Investigate periods with high anomaly concentration</li>
+                        <li>Check equipment operation during identified anomaly periods</li>
+                        <li>Consider energy audit for consistently anomalous systems</li>
+                        <li>Monitor usage patterns during identified anomaly periods</li>
+                        <li>Compare with external factors (weather, occupancy, etc.)</li>
+                    </ol>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Next Steps:</strong> For more detailed recommendations based on these anomalies, visit the <a href="{{ url_for('recommendations') }}" class="alert-link">Recommendations</a> page.
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <a href="{{ url_for('insights') }}" class="btn btn-primary">
+                        <i class="fas fa-lightbulb me-2"></i> View Model Insights
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load analysis data for visualization
+    fetch(`/api/analysis/{{ analysis.id }}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load analysis data');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Find a timestamp and energy value column for visualization
+            let timeField = 'index';
+            let valueField = data.columns[0]; // Default to first column
+            
+            // Look for energy-related columns
+            const energyColumns = data.columns.filter(col => 
+                col.includes('energy') || 
+                col.includes('power') || 
+                col.includes('consumption') ||
+                col.includes('usage')
+            );
+            
+            if (energyColumns.length > 0) {
+                valueField = energyColumns[0];
+            }
+            
+            // Create time series chart with anomalies
+            createTimeSeriesChart(
+                'time-series-chart',
+                data.data,
+                data.anomalies,
+                timeField,
+                valueField,
+                `${valueField} with Detected Anomalies`
+            );
+            
+            // Create anomaly distribution pie chart
+            createAnomalyPieChart(
+                'anomaly-pie-chart',
+                data.anomalies,
+                'Normal vs Anomaly Distribution'
+            );
+            
+            // Create distribution chart
+            createDistributionChart(
+                'distribution-chart',
+                data.data,
+                data.anomalies,
+                valueField,
+                `${valueField} Distribution`
+            );
+            
+            // Look for hour column for heatmap
+            let hourField = null;
+            data.columns.forEach(col => {
+                if (col.includes('hour')) {
+                    hourField = col;
+                }
+            });
+            
+            // If we have an hour field, create time heatmap
+            if (hourField) {
+                createTimeOfDayHeatmap(
+                    'time-heatmap',
+                    data.data,
+                    data.anomalies,
+                    hourField,
+                    valueField,
+                    'Anomaly Distribution by Time of Day'
+                );
+            } else {
+                // If no hour field, create a different visualization
+                document.getElementById('time-heatmap').innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-exclamation-circle fa-3x mb-3 text-muted"></i>
+                        <p>Time field not found in data. Cannot create time of day analysis.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading analysis data:', error);
+            // Display error messages in chart containers
+            document.querySelectorAll('[id$="-chart"], #time-heatmap').forEach(container => {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        Failed to load chart data. Please try again later.
+                    </div>
+                `;
+            });
+        });
+    
+    // Toggle between all data and anomalies only
+    const toggleButton = document.getElementById('toggle-anomalies');
+    if (toggleButton) {
+        toggleButton.addEventListener('click', function() {
+            const tableRows = document.querySelectorAll('table tbody tr');
+            const showAnomaliesOnly = this.textContent.includes('Show Anomalies Only');
+            
+            if (showAnomaliesOnly) {
+                // Change to anomalies only
+                tableRows.forEach(row => {
+                    if (!row.classList.contains('anomaly-row')) {
+                        row.style.display = 'none';
+                    }
+                });
+                this.innerHTML = '<i class="fas fa-list me-1"></i> Show All Data';
+            } else {
+                // Show all data
+                tableRows.forEach(row => {
+                    row.style.display = '';
+                });
+                this.innerHTML = '<i class="fas fa-filter me-1"></i> Show Anomalies Only';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

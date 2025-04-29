@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+
+{% block title %}Model Insights - Energy Anomaly Detection{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h1 class="page-header">
+            <i class="fas fa-lightbulb me-2"></i> Model Insights
+        </h1>
+    </div>
+</div>
+
+{% if analyses %}
+<!-- Model Performance Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i> Algorithm Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="algorithm-performance-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bullseye me-2"></i> Precision vs Recall
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="precision-recall-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Anomaly Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="anomaly-distribution-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Algorithm Comparison & Details -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i> Algorithm Comparison
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Compare the performance metrics of different algorithms on your energy data:</p>
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Dataset</th>
+                                <th>Accuracy</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1 Score</th>
+                                <th>Anomalies</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analysis in analyses %}
+                            <tr>
+                                <td>
+                                    {% if analysis.algorithm == 'isolation_forest' %}
+                                        Isolation Forest
+                                    {% elif analysis.algorithm == 'autoencoder' %}
+                                        AutoEncoder
+                                    {% elif analysis.algorithm == 'kmeans' %}
+                                        K-Means
+                                    {% else %}
+                                        {{ analysis.algorithm }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ analysis.dataset.name }}</td>
+                                <td>{{ "%.1f"|format(analysis.accuracy * 100) }}%</td>
+                                <td>{{ "%.1f"|format(analysis.precision * 100) }}%</td>
+                                <td>{{ "%.1f"|format(analysis.recall * 100) }}%</td>
+                                <td>{{ "%.2f"|format(analysis.f1_score) }}</td>
+                                <td>{{ analysis.anomaly_count }}</td>
+                                <td>
+                                    <a href="{{ url_for('results', analysis_id=analysis.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Algorithm Details -->
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-tree me-2"></i> Isolation Forest
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-tree fa-3x mb-3" style="color: var(--primary);"></i>
+                </div>
+                <h6 class="mb-3">How It Works:</h6>
+                <p>Isolation Forest isolates observations by randomly selecting a feature and then randomly selecting a split value between the maximum and minimum values of the selected feature.</p>
+                
+                <h6 class="mt-3 mb-2">Strengths:</h6>
+                <ul>
+                    <li>Performs well on high-dimensional data</li>
+                    <li>Fast training and prediction times</li>
+                    <li>Handles mixed data types well</li>
+                    <li>Doesn't rely on distance calculations</li>
+                </ul>
+                
+                <h6 class="mt-3 mb-2">Best Use Cases:</h6>
+                <p>Large datasets with many features and when computation time is important.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-brain me-2"></i> AutoEncoder
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-brain fa-3x mb-3" style="color: var(--success);"></i>
+                </div>
+                <h6 class="mb-3">How It Works:</h6>
+                <p>AutoEncoders are neural networks that try to learn a compressed representation of the input data. Anomalies are points with high reconstruction error when the model attempts to recreate the original input.</p>
+                
+                <h6 class="mt-3 mb-2">Strengths:</h6>
+                <ul>
+                    <li>Can capture complex, non-linear patterns</li>
+                    <li>Works well with temporal data</li>
+                    <li>Robust to noise in the data</li>
+                    <li>Can capture subtle anomalies</li>
+                </ul>
+                
+                <h6 class="mt-3 mb-2">Best Use Cases:</h6>
+                <p>Complex datasets with subtle anomalies and when high detection accuracy is needed.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-project-diagram me-2"></i> K-Means Clustering
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-project-diagram fa-3x mb-3" style="color: var(--warning);"></i>
+                </div>
+                <h6 class="mb-3">How It Works:</h6>
+                <p>K-Means groups data points into clusters. Points that are far from their cluster center are considered anomalies, as they don't fit well with any of the identified patterns.</p>
+                
+                <h6 class="mt-3 mb-2">Strengths:</h6>
+                <ul>
+                    <li>Intuitive and easy to understand</li>
+                    <li>Works well when data has natural clusters</li>
+                    <li>Computationally efficient</li>
+                    <li>Good for dense, well-separated data</li>
+                </ul>
+                
+                <h6 class="mt-3 mb-2">Best Use Cases:</h6>
+                <p>Data with clear cluster structures and when anomalies are expected to be far from normal patterns.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Insights -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i> Model Interpretation
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Understanding Your Results:</h6>
+                        <p>When interpreting model results, consider the following factors:</p>
+                        <ul>
+                            <li><strong>Accuracy:</strong> Overall correctness of predictions</li>
+                            <li><strong>Precision:</strong> Ratio of true anomalies among detected anomalies</li>
+                            <li><strong>Recall:</strong> Percentage of actual anomalies that were detected</li>
+                            <li><strong>F1 Score:</strong> Harmonic mean of precision and recall</li>
+                        </ul>
+                        
+                        <p>For energy anomaly detection, high precision is often more important than high recall, as false alarms can be costly.</p>
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i> <strong>Tip:</strong> Compare results from multiple algorithms to gain more confidence in identified anomalies.
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Improving Model Performance:</h6>
+                        <ol>
+                            <li><strong>Data Quality:</strong> Clean data with accurate timestamps yields better results</li>
+                            <li><strong>Feature Engineering:</strong> Adding contextual features like time of day can improve detection</li>
+                            <li><strong>Algorithm Selection:</strong> Different algorithms work better for different patterns:
+                                <ul>
+                                    <li>Isolation Forest for outliers</li>
+                                    <li>AutoEncoder for subtle, complex patterns</li>
+                                    <li>K-Means for clustered data</li>
+                                </ul>
+                            </li>
+                            <li><strong>Parameter Tuning:</strong> Adjust algorithm parameters for your specific data</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- No Analyses Yet Message -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-line fa-4x mb-3 text-muted"></i>
+                <h3>No analyses available yet</h3>
+                <p class="mb-4">Run your first anomaly detection to see model insights.</p>
+                <a href="{{ url_for('detection') }}" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i> Run Detection
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if analyses %}
+    // Prepare data for algorithm performance chart
+    const algorithms = [];
+    const accuracies = [];
+    const precisions = [];
+    const recalls = [];
+    
+    {% for analysis in analyses %}
+    algorithms.push(
+        {% if analysis.algorithm == 'isolation_forest' %}
+            'Isolation Forest'
+        {% elif analysis.algorithm == 'autoencoder' %}
+            'AutoEncoder'
+        {% elif analysis.algorithm == 'kmeans' %}
+            'K-Means'
+        {% else %}
+            '{{ analysis.algorithm }}'
+        {% endif %}
+    );
+    accuracies.push({{ analysis.accuracy }});
+    precisions.push({{ analysis.precision }});
+    recalls.push({{ analysis.recall }});
+    {% endfor %}
+    
+    // Algorithm Performance Chart
+    Plotly.newPlot('algorithm-performance-chart', [
+        {
+            x: algorithms,
+            y: accuracies,
+            type: 'bar',
+            name: 'Accuracy',
+            marker: {
+                color: '#3498db'
+            }
+        },
+        {
+            x: algorithms,
+            y: precisions,
+            type: 'bar',
+            name: 'Precision',
+            marker: {
+                color: '#2ecc71'
+            }
+        },
+        {
+            x: algorithms,
+            y: recalls,
+            type: 'bar',
+            name: 'Recall',
+            marker: {
+                color: '#e74c3c'
+            }
+        }
+    ], {
+        title: {
+            text: 'Algorithm Performance Metrics',
+            font: {
+                color: '#ecf0f1',
+                size: 16
+            }
+        },
+        barmode: 'group',
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        xaxis: {
+            title: 'Algorithm',
+            color: '#ecf0f1'
+        },
+        yaxis: {
+            title: 'Score (0-1)',
+            range: [0, 1],
+            color: '#ecf0f1',
+            gridcolor: '#2c3e50'
+        },
+        legend: {
+            font: {
+                color: '#ecf0f1'
+            }
+        }
+    }, {
+        responsive: true
+    });
+    
+    // Precision vs Recall Chart
+    Plotly.newPlot('precision-recall-chart', [
+        {
+            x: precisions,
+            y: recalls,
+            mode: 'markers+text',
+            type: 'scatter',
+            text: algorithms,
+            textposition: 'top center',
+            marker: {
+                size: 12,
+                color: algorithms.map((algo, i) => {
+                    if (algo === 'Isolation Forest') return '#3498db';
+                    if (algo === 'AutoEncoder') return '#2ecc71';
+                    if (algo === 'K-Means') return '#f39c12';
+                    return '#e74c3c';
+                })
+            },
+            textfont: {
+                color: '#ecf0f1'
+            }
+        }
+    ], {
+        title: {
+            text: 'Precision vs Recall',
+            font: {
+                color: '#ecf0f1',
+                size: 16
+            }
+        },
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        xaxis: {
+            title: 'Precision',
+            range: [0, 1],
+            color: '#ecf0f1',
+            gridcolor: '#2c3e50'
+        },
+        yaxis: {
+            title: 'Recall',
+            range: [0, 1],
+            color: '#ecf0f1',
+            gridcolor: '#2c3e50'
+        }
+    }, {
+        responsive: true
+    });
+    
+    // Anomaly Distribution Chart
+    const algoNames = [];
+    const anomalyCounts = [];
+    
+    {% for analysis in analyses %}
+    algoNames.push(
+        {% if analysis.algorithm == 'isolation_forest' %}
+            'Isolation Forest'
+        {% elif analysis.algorithm == 'autoencoder' %}
+            'AutoEncoder'
+        {% elif analysis.algorithm == 'kmeans' %}
+            'K-Means'
+        {% else %}
+            '{{ analysis.algorithm }}'
+        {% endif %}
+    );
+    anomalyCounts.push({{ analysis.anomaly_count }});
+    {% endfor %}
+    
+    Plotly.newPlot('anomaly-distribution-chart', [
+        {
+            x: algoNames,
+            y: anomalyCounts,
+            type: 'bar',
+            marker: {
+                color: ['#3498db', '#2ecc71', '#f39c12', '#e74c3c'].slice(0, algoNames.length)
+            }
+        }
+    ], {
+        title: {
+            text: 'Anomalies Detected by Algorithm',
+            font: {
+                color: '#ecf0f1',
+                size: 16
+            }
+        },
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        xaxis: {
+            title: 'Algorithm',
+            color: '#ecf0f1'
+        },
+        yaxis: {
+            title: 'Number of Anomalies',
+            color: '#ecf0f1',
+            gridcolor: '#2c3e50'
+        }
+    }, {
+        responsive: true
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block title %}Run Detection - Energy Anomaly Detection{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h1 class="page-header">
+            <i class="fas fa-search me-2"></i> Run Anomaly Detection
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-play me-2"></i> Configure Detection
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="dataset" class="form-label">{{ form.dataset.label }}</label>
+                        {{ form.dataset(class="form-select", id="dataset") }}
+                        {% if form.dataset.errors %}
+                            {% for error in form.dataset.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="algorithm" class="form-label">{{ form.algorithm.label }}</label>
+                        {{ form.algorithm(class="form-select", id="algorithm") }}
+                        {% if form.algorithm.errors %}
+                            {% for error in form.algorithm.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info algorithm-info" id="isolation-forest-info">
+                        <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i> Isolation Forest</h6>
+                        <p class="mb-0">
+                            This algorithm isolates anomalies by randomly partitioning the data. It's effective for high-dimensional data and is particularly fast.
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-info algorithm-info d-none" id="autoencoder-info">
+                        <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i> AutoEncoder</h6>
+                        <p class="mb-0">
+                            A neural network approach that learns normal patterns and identifies data points that cannot be reconstructed accurately.
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-info algorithm-info d-none" id="kmeans-info">
+                        <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i> K-Means Clustering</h6>
+                        <p class="mb-0">
+                            This algorithm groups data into clusters and identifies points that are far from cluster centers as anomalies.
+                        </p>
+                    </div>
+                    
+                    {{ form.submit(class="btn btn-primary w-100") }}
+                </form>
+            </div>
+        </div>
+        
+        {% if analyses %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i> Recent Analyses
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Dataset</th>
+                                <th>Algorithm</th>
+                                <th>Created</th>
+                                <th>Anomalies</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analysis in analyses %}
+                            <tr>
+                                <td>{{ analysis.dataset.name }}</td>
+                                <td>
+                                    {% if analysis.algorithm == 'isolation_forest' %}
+                                        Isolation Forest
+                                    {% elif analysis.algorithm == 'autoencoder' %}
+                                        AutoEncoder
+                                    {% elif analysis.algorithm == 'kmeans' %}
+                                        K-Means
+                                    {% else %}
+                                        {{ analysis.algorithm }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ analysis.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ analysis.anomaly_count }}</td>
+                                <td>
+                                    <a href="{{ url_for('results', analysis_id=analysis.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i> Algorithm Comparison
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Strengths</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Isolation Forest</td>
+                                <td>
+                                    <ul class="mb-0">
+                                        <li>Fast computation</li>
+                                        <li>Handles high-dimensional data well</li>
+                                        <li>Doesn't make assumptions about data distribution</li>
+                                    </ul>
+                                </td>
+                                <td>Large datasets with many features</td>
+                            </tr>
+                            <tr>
+                                <td>AutoEncoder</td>
+                                <td>
+                                    <ul class="mb-0">
+                                        <li>Learns complex patterns</li>
+                                        <li>Can capture non-linear relationships</li>
+                                        <li>Good with temporal patterns</li>
+                                    </ul>
+                                </td>
+                                <td>Complex data with hidden patterns</td>
+                            </tr>
+                            <tr>
+                                <td>K-Means</td>
+                                <td>
+                                    <ul class="mb-0">
+                                        <li>Simple and intuitive</li>
+                                        <li>Fast for small to medium datasets</li>
+                                        <li>Works well for distinct clusters</li>
+                                    </ul>
+                                </td>
+                                <td>Data with natural groupings</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4">
+                    <h6 class="mb-3">Detection Process:</h6>
+                    <ol>
+                        <li>Select your uploaded dataset</li>
+                        <li>Choose an anomaly detection algorithm</li>
+                        <li>Click "Run Analysis" to start the detection process</li>
+                        <li>View detailed results and visualizations of detected anomalies</li>
+                    </ol>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i> <strong>Note:</strong> Complex algorithms may take longer to run on larger datasets. The AutoEncoder algorithm, in particular, may require more processing time.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i> Detection Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>For Best Results:</h6>
+                <ul>
+                    <li>Use clean data with minimal missing values</li>
+                    <li>Include timestamps in your data for temporal patterns</li>
+                    <li>Try multiple algorithms and compare results</li>
+                    <li>Isolation Forest is recommended for initial analysis</li>
+                    <li>AutoEncoder is best for capturing complex patterns</li>
+                    <li>K-Means works well when your data has natural clusters</li>
+                </ul>
+                
+                <div class="text-center mt-4">
+                    <i class="fas fa-chart-line fa-3x mb-3" style="color: var(--primary);"></i>
+                    <p>After running detection, check the Results page for detailed visualizations of the anomalies found in your data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide algorithm information based on selection
+    const algorithmSelect = document.getElementById('algorithm');
+    const infoBoxes = document.querySelectorAll('.algorithm-info');
+    
+    function updateAlgorithmInfo() {
+        // Hide all info boxes
+        infoBoxes.forEach(box => {
+            box.classList.add('d-none');
+        });
+        
+        // Show selected algorithm info
+        const selectedAlgorithm = algorithmSelect.value;
+        const infoBoxId = `${selectedAlgorithm}-info`;
+        const infoBox = document.getElementById(infoBoxId);
+        if (infoBox) {
+            infoBox.classList.remove('d-none');
+        }
+    }
+    
+    // Update on page load
+    updateAlgorithmInfo();
+    
+    // Update when selection changes
+    algorithmSelect.addEventListener('change', updateAlgorithmInfo);
+    
+    // Pre-select dataset if provided in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const datasetId = urlParams.get('dataset');
+    if (datasetId && document.getElementById('dataset')) {
+        document.getElementById('dataset').value = datasetId;
+    }
+});
+</script>
+{% endblock %}

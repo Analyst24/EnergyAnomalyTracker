@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Energy Anomaly Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        padding: 20px;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .metric-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        color: var(--primary);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .metric-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    
+    .chart-container {
+        min-height: 350px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h1 class="page-header">
+            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="metric-value" id="dataset-count">{{ datasets|length }}</div>
+            <div class="metric-label">Datasets</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="metric-value" id="analysis-count">{{ analyses|length }}</div>
+            <div class="metric-label">Analyses</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="metric-value" id="anomaly-count">0</div>
+            <div class="metric-label">Anomalies Detected</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="metric-value" id="avg-anomalies">0.00</div>
+            <div class="metric-label">Avg. Anomalies per Analysis</div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Charts -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i> Energy Consumption Trend
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="energy-trend-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i> Algorithm Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="algorithm-distribution-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity & Data Preview -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-database me-2"></i> Datasets
+                </h5>
+                <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-upload me-1"></i> Upload
+                </a>
+            </div>
+            <div class="card-body">
+                {% if datasets %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Created</th>
+                                <th>Size</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dataset in datasets %}
+                            <tr>
+                                <td>{{ dataset.name }}</td>
+                                <td>{{ dataset.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ dataset.filename }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No datasets uploaded yet. 
+                    <a href="{{ url_for('upload') }}" class="alert-link">Upload your first dataset</a> to get started.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-search me-2"></i> Recent Analyses
+                </h5>
+                <a href="{{ url_for('detection') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-play me-1"></i> Run Detection
+                </a>
+            </div>
+            <div class="card-body">
+                {% if analyses %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Algorithm</th>
+                                <th>Anomalies</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analysis in analyses %}
+                            <tr>
+                                <td>{{ analysis.name }}</td>
+                                <td>
+                                    {% if analysis.algorithm == 'isolation_forest' %}
+                                        Isolation Forest
+                                    {% elif analysis.algorithm == 'autoencoder' %}
+                                        AutoEncoder
+                                    {% elif analysis.algorithm == 'kmeans' %}
+                                        K-Means
+                                    {% else %}
+                                        {{ analysis.algorithm }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ analysis.anomaly_count }}</td>
+                                <td>
+                                    <a href="{{ url_for('results', analysis_id=analysis.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No analyses run yet. 
+                    <a href="{{ url_for('detection') }}" class="alert-link">Run your first analysis</a> to detect anomalies.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Visualization Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i> Data Exploration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="dataset-select" class="form-label">Select Dataset</label>
+                        <select class="form-select" id="dataset-select">
+                            <option value="">-- Select a dataset --</option>
+                            {% for dataset in datasets %}
+                            <option value="{{ dataset.id }}">{{ dataset.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="analysis-select" class="form-label">Select Analysis</label>
+                        <select class="form-select" id="analysis-select">
+                            <option value="">-- Select an analysis --</option>
+                            {% for analysis in analyses %}
+                            <option value="{{ analysis.id }}">{{ analysis.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="dataset-visualization" class="chart-container mb-3">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <p>Select a dataset to visualize data</p>
+                    </div>
+                </div>
+                
+                <div id="analysis-results" class="chart-container">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-search fa-3x mb-3"></i>
+                        <p>Select an analysis to view results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dashboard is initialized in dashboard.js
+});
+</script>
+{% endblock %}
